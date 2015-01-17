@@ -25,7 +25,10 @@
 </body>
 
 <template name="title">
-<h2>{{title}}</h2>
+    <div class="pull-left" style="max-width: 200px">
+        <img src="{{image.value}}" class="img-rounded" style="max-width:100%;">
+    </div>
+    <h2>{{title}}</h2>
 </template>
 
 <template name="ingredients">

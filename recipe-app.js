@@ -8,6 +8,15 @@ if (Meteor.isClient) {
   Template.title.helpers({
     title: function() {
       return Session.get("recipe").title;
+    },
+    image: function() {
+      var imageUrls = Session.get("recipe").imageUrls;
+      if (imageUrls.length > 0) {
+        return {"key": 0, "value": imageUrls[0]};
+      } else {
+        // TODO return placeholder image instead of null
+        return {"key": 0, "value": null}
+      }
     }
   });
 
@@ -28,7 +37,6 @@ if (Meteor.isClient) {
   Template.instructions.helpers({
     instructions: function() {
       var bigInstructionText = Session.get("recipe").text;
-      console.log(bigInstructionText);
       return bigInstructionText.split(/\.\s/);
     }
   });

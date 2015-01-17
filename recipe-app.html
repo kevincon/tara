@@ -8,47 +8,56 @@
 
             <div class="row">
                 <div class="col-md-12">
-                    <h1> Peanut-Butter and Jelly Sandwiches!</h1>
+                    {{> title}}
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-4">
-                    <h2> Ingredients</h2>
-                    <table class="table table-border">
-                        <tbody>
-                            <tr>
-                                <td> 2 slices of bread!</td>
-                            </tr>
-                            <tr>
-                                <td> 2 tablespoons of Peanut Butter!</td>
-                            </tr>    
-                            <tr>
-                                <td> 2 tablespoons of Jelly</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    {{> ingredients}}
                 </div>
                 <div class="col-md-8">
-                    <h2> Instructions</h2>
-                        <table class="table table-border">
-                          <tbody>
-                              <tr>
-                                  <td> Take the two slices of bread and place them on a clean surface.</td>
-                              </tr>
-                              <tr>
-                                  <td> With a knife or spoon, spread peanut butter onto one slice of bread. If there is extra peanut butter, spread on other slice of bread</td>
-                              </tr>
-                              <tr>
-                                  <td> Add Jelly onto one slice of bread.</td>
-                              </tr>
-                              <tr>
-                                  <td> Combine the two slices of bread together to create a yummy tasty sandwich!</td>
-                            </tr>
-                         </tbody>
-                    </table>
+                    {{> instructions}}
                 </div>
             </div>
 
         </div>
     </div>
 </body>
+
+<template name="title">
+<h2>{{title}}</h2>
+</template>
+
+<template name="ingredients">
+    <h2> Ingredients</h2>
+    <table class="table table-border">
+        <tbody>
+            {{#each ingredients}}
+                {{> ingredient}}
+            {{/each}}
+        </tbody>
+    </table>
+</template>
+
+<template name="ingredient">
+    <tr>
+        <td>{{originalString}}</td>
+    </tr>
+</template>
+
+<template name="instructions">
+    <h2> Instructions</h2>
+    <table class="table table-border">
+        <tbody>
+        {{#each arrayify instructions 1}}
+            {{> instruction}}
+        {{/each}}
+        </tbody>
+    </table>
+</template>
+
+<template name="instruction">
+    <tr>
+        <td>{{key}}. {{value}}</td>
+    </tr>
+</template>

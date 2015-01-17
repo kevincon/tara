@@ -1,17 +1,35 @@
 if (Meteor.isClient) {
-  // counter starts at 0
-  Session.setDefault("counter", 0);
+  //Session.setDefault("recipe", {});
 
-  Template.hello.helpers({
-    counter: function () {
-      return Session.get("counter");
+  Meteor.call("getRecipe", function(error, result) {
+    Session.set("recipe", result);
+  });
+
+  Template.title.helpers({
+    title: function() {
+      return Session.get("recipe").title;
     }
   });
 
-  Template.hello.events({
-    'click button': function () {
-      // increment the counter when button is clicked
-      Session.set("counter", Session.get("counter") + 1);
+  Template.ingredients.helpers({
+    ingredients: function() {
+      return Session.get("recipe").extendedIngredients;
+    }
+  });
+
+  Template.registerHelper("arrayify", function(theArray, offset) {
+    resultingArray = [];
+    for (var i = 0; i < theArray.length; i++) {
+      resultingArray.push({"key": i + offset, "value": theArray[i]});
+    }
+    return resultingArray;
+  });
+
+  Template.instructions.helpers({
+    instructions: function() {
+      var bigInstructionText = Session.get("recipe").text;
+      console.log(bigInstructionText);
+      return bigInstructionText.split(/\.\s/);
     }
   });
 }
@@ -19,5 +37,12 @@ if (Meteor.isClient) {
 if (Meteor.isServer) {
   Meteor.startup(function () {
     // code to run on server at startup
+
+  });
+
+  Meteor.methods({
+    getRecipe: function() {
+      return EJSON.parse(Assets.getText("recipe.json"));
+    }
   });
 }

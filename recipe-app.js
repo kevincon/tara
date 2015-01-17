@@ -1,5 +1,6 @@
 if (Meteor.isClient) {
-  //Session.setDefault("recipe", {});
+  Session.setDefault("currentInstruction", 1); // indexed by 1
+  Session.setDefault("recipe", {});
 
   Meteor.call("getRecipe", function(error, result) {
     Session.set("recipe", result);
@@ -10,12 +11,17 @@ if (Meteor.isClient) {
       return Session.get("recipe").title;
     },
     image: function() {
-      var imageUrls = Session.get("recipe").imageUrls;
-      if (imageUrls.length > 0) {
-        return {"key": 0, "value": imageUrls[0]};
+      var recipe = Session.get("recipe");
+      if (recipe) {
+        var imageUrls = recipe.imageUrls;
+        if (imageUrls.length > 0) {
+          return {"key": 0, "value": imageUrls[0]};
+        } else {
+          // TODO return placeholder image instead of null
+          return {"key": 0, "value": null};
+        }
       } else {
-        // TODO return placeholder image instead of null
-        return {"key": 0, "value": null}
+        return {"key": 0, "value": null};
       }
     }
   });
@@ -23,6 +29,12 @@ if (Meteor.isClient) {
   Template.ingredients.helpers({
     ingredients: function() {
       return Session.get("recipe").extendedIngredients;
+    }
+  });
+
+  Template.ingredient.events({
+    "click tr": function() {
+      speak(this.originalString);
     }
   });
 
@@ -40,17 +52,44 @@ if (Meteor.isClient) {
       return bigInstructionText.split(/\.\s/);
     }
   });
+
+  Template.instruction.helpers({
+    isCurrentInstruction: function(key) {
+      return key == Session.get("currentInstruction");
+    }
+  });
+
+  Template.instruction.events({
+    "click tr": function() {
+      Session.set("currentInstruction", this.key);
+      speak(this.value);
+    }
+  });
+
+  function speak(text) {
+    Meteor.call("getSpeechURL", text, function(error, result) {
+      var speech = new buzz.sound(result);
+      speech.play();
+    });
+  }
 }
 
 if (Meteor.isServer) {
-  Meteor.startup(function () {
-    // code to run on server at startup
-
-  });
-
   Meteor.methods({
     getRecipe: function() {
       return EJSON.parse(Assets.getText("recipe.json"));
+    },
+    getSpeechURL: function(text) {
+      var options = {"apikey": Meteor.settings.ISPEECH_API_KEY,
+                   "action": "convert",
+                   "voice": "ukenglishfemale",
+                   "text": text};
+
+      var speechURL = "https://api.ispeech.org/api/rest?";
+      for (option in options) {
+        speechURL += option + "=" + options[option] + "&";
+      }
+      return speechURL;
     }
   });
 }

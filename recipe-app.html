@@ -38,7 +38,7 @@
 
 <template name="ingredients">
     <h2> Ingredients</h2>
-    <table class="table table-border">
+    <table class="table table-border table-hover">
         <tbody>
             {{#each ingredients}}
                 {{> ingredient}}
@@ -55,7 +55,7 @@
 
 <template name="instructions">
     <h2> Instructions</h2>
-    <table class="table table-border">
+    <table class="table table-border table-hover">
         <tbody>
         {{#each arrayify instructions 1}}
             {{> instruction}}
@@ -65,7 +65,7 @@
 </template>
 
 <template name="instruction">
-    <tr>
+    <tr class="{{#if isCurrentInstruction key}}info{{/if}}">
         <td>{{key}}. {{value}}</td>
     </tr>
 </template>

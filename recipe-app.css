@@ -1,1 +1,15 @@
 /* CSS declarations go here */
+body{
+    background-color:#ffda76;
+   
+}
+.jumbotron{
+    background-color:#e8d7c9;
+    border: 2px solid #ae7bff;
+}
+td {
+    border-top-color:#e88ce0 !important;
+}
+img{
+    border: 1px solid black;
+}

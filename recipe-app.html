@@ -5,7 +5,11 @@
 <body>
     <div class="container">
         <div class="jumbotron">
-
+            <div class="row">
+                <div class="col-md-12">
+                    {{> recipeurl}}
+                </div>
+            </div>
             <div class="row">
                 <div class="col-md-12">
                     {{> title}}
@@ -28,6 +32,10 @@
       </a> <a href="https://www.linkedin.com/pub/evan-benshetler/17/930/715">Evan Benshetler</a>,<a href="https://www.linkedin.com/pub/katarina-polcari/95/835/833"> Katarina Polcari</a>.</p>
 </footer>
 </body>
+
+<template name="recipeurl">
+    Recipe URL: <input type="text" size=50 class="recipeurl">
+</template>
 
 <template name="title">
     <div class="pull-left" style="max-width: 200px">

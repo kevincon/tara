@@ -2,9 +2,30 @@ if (Meteor.isClient) {
   Session.setDefault("currentInstruction", 1); // indexed by 1
   Session.setDefault("recipe", {});
 
-  Meteor.call("getRecipe", function(error, result) {
+  Meteor.call("getTestRecipe", function(error, result) {
     Session.set("recipe", result);
   });
+
+  Template.recipeurl.events = {
+    // If the enter key is pressed in the recipe URL input box, load the url.
+    'keypress input.recipeurl': function (event, template) {
+      if (event.which === 13) {  // Enter key pressed
+        var url = template.find(".recipeurl").value;
+        if (!url || url.length === 0) { return; }
+
+        console.debug("Loading new recipe from URL: " + url);
+        Meteor.call("getRecipe", url, function(error, result) {
+          if (result === undefined || result === null) {
+            console.debug("Result is bad :(");
+          } else {
+            console.debug("Result is good :)");
+            console.debug("Stringified recipe: " + EJSON.stringify(result));
+            Session.set("recipe", result);
+          }
+        });
+      }
+    }
+  };
 
   Template.title.helpers({
     title: function() {
@@ -76,14 +97,29 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
   Meteor.methods({
-    getRecipe: function() {
+    getTestRecipe: function() {
       return EJSON.parse(Assets.getText("recipe.json"));
+    },
+    getRecipe: function(recipeUrl) {
+      //? this.unblock
+      var endpoint = "https://webknox-recipes.p.mashape.com/recipes/extract";
+      var params = {"url": recipeUrl};
+      var headers = {"X-Mashape-Key": Meteor.settings.WEBKNOX_API_KEY,
+                     "Accept": "application/json"};
+
+      try {
+        var result = Meteor.http.call("GET", endpoint, {params: params, headers: headers});
+        return EJSON.parse(result.content);
+      } catch (e) {
+        console.log("Cannot get recipe from URL", e);
+        return null;
+      }
     },
     getSpeechURL: function(text) {
       var options = {"apikey": Meteor.settings.ISPEECH_API_KEY,
-                   "action": "convert",
-                   "voice": "ukenglishfemale",
-                   "text": text};
+                     "action": "convert",
+                     "voice": "ukenglishfemale",
+                     "text": text};
 
       var speechURL = "https://api.ispeech.org/api/rest?";
       for (option in options) {

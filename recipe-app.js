@@ -1,7 +1,7 @@
 if (Meteor.isClient) {
   Meteor.startup(function () {
     Session.setDefault("currentInstruction", 1); // indexed by 1
-    Session.setDefault("recipe", {});
+    Session.setDefault("recipe", null);
 
     if (annyang) {
       var commands = {
@@ -116,23 +116,45 @@ if (Meteor.isClient) {
   });
   */
 
+  Template.body.helpers({
+    recipeExists: function() {
+      return Session.get("recipe") !== null;
+    }
+  });
+
+  Template.body.events = {
+    'click .favorite': function(event, template) {
+      var url = template.find(".recipeurl").value;
+      loadRecipeUrl("http://allrecipes.com/recipe/best-mac-n-cheese-ever/");
+    }
+  };
+
+  function loadRecipeUrl(url) {
+    if (!url || url.length === 0) {
+      console.log("bad recipe url");
+      return;
+    }
+
+    console.debug("Loading new recipe from URL: " + url);
+    Meteor.call("getRecipe", url, function(error, result) {
+      if (result === undefined || result === null) {
+        console.debug("Result is bad :(");
+      } else {
+        console.debug("Result is good :)");
+        console.debug("Stringified recipe: " + EJSON.stringify(result));
+        Session.set("recipe", result);
+      }
+    });
+  }
+
   Template.recipeurl.events = {
     // If the enter key is pressed in the recipe URL input box, load the url.
-    'keypress input.recipeurl': function (event, template) {
+    'keypress .recipeurl': function (event, template) {
       if (event.which === 13) {  // Enter key pressed
+        console.log("enter pressed");
         var url = template.find(".recipeurl").value;
-        if (!url || url.length === 0) { return; }
-
-        console.debug("Loading new recipe from URL: " + url);
-        Meteor.call("getRecipe", url, function(error, result) {
-          if (result === undefined || result === null) {
-            console.debug("Result is bad :(");
-          } else {
-            console.debug("Result is good :)");
-            console.debug("Stringified recipe: " + EJSON.stringify(result));
-            Session.set("recipe", result);
-          }
-        });
+        console.log("url" + url);
+        loadRecipeUrl(url);
       }
     }
   };
@@ -146,7 +168,12 @@ if (Meteor.isClient) {
       if (recipe) {
         var imageUrls = recipe.imageUrls;
         if (imageUrls.length > 0) {
-          return {"key": 0, "value": imageUrls[0]};
+          var url = imageUrls[0];
+          if (url.indexOf("http") != -1) {
+            return {"key": 0, "value": imageUrls[0]};
+          } else {
+            return {"key": 0, "value": null};
+          }
         } else {
           // TODO return placeholder image instead of null
           return {"key": 0, "value": null};

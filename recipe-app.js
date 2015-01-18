@@ -5,7 +5,23 @@ if (Meteor.isClient) {
 
     if (annyang) {
       var commands = {
-        '*command': function(command) { alert('You said: ' + command); }
+        '*command': function(command) {
+          Meteor.call("getWitAccessToken", function(tokenError, accessToken) {
+            console.log(tokenError);
+            if (!tokenError) {
+              var parameters = {"q": command,
+                                "access_token": accessToken};
+              HTTP.get('https://api.wit.ai/message',
+                       {params: parameters},
+                       function (error, result) {
+                         console.log(error);
+                         if (!error) {
+                          console.log(EJSON.stringify(result));
+                         }
+                       });
+            }
+          });
+        }
       };
 
       annyang.addCommands(commands);
@@ -140,6 +156,9 @@ if (Meteor.isServer) {
         speechURL += option + "=" + options[option] + "&";
       }
       return speechURL;
+    },
+    getWitAccessToken: function() {
+      return Meteor.settings.WIT_ACCESS_TOKEN;
     }
   });
 }

@@ -1,4 +1,5 @@
 {
     "ISPEECH_API_KEY": null,
-    "WEBKNOX_API_KEY": null
+    "WEBKNOX_API_KEY": null,
+    "WIT_ACCESS_TOKEN": null
 }

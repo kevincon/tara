@@ -36,47 +36,35 @@ if (Meteor.isClient) {
     for (var i = 0; i < json.outcomes.length; i++) {
       var outcome = json.outcomes[i];
       var confidence = outcome.confidence;
-      var intent = outcome.intent;
-      var entities = [];
-      for (entityName in outcome.entities) {
-        var entityArray = outcome.entities[entityName];
-        for (var k = 0; k < entityArray.length; k++) {
-          entities.push(entityName + "," + entityArray[k].value);
-        }
-      }
-      console.debug("Wit response (confidence: %f, intent: %s, entities: %s",
-                    confidence, intent, entities.join(","));
-    }
+      var intent = outcome.intent;  // eg. ingredient_query
+      var entityType = "";
+      var entityValue = "";
 
-    for (outcome_index in json.outcomes) {
-      var outcome = json.outcomes[outcome_index];
-      console.debug("Outcome: ", EJSON.stringify(outcome));
-      if (outcome.confidence >= 0.8) {
-        switch (outcome.intent) {
-          case "ingredient_query":
-            if (outcome.entities.ingredient.length > 0) {
-              var ingredient = outcome.entities.ingredient[0].value;
-              console.debug("ingredient_query: ", ingredient);
-              selectIngredient(ingredient);
-            } else {
-              console.debug("No valid ingredients!");
-            }
-          break;
-          case "instruction_navigation":
-            if (outcome.entities.instruction.length > 0) {
-              var instruction = outcome.entities.instruction[0].value;
-              console.debug("instruction_navigation: ", instruction);
-              selectInstruction(instruction);
-            } else {
-              console.debug("No valid ingredients!");
-            }
-          break;
-          default:
-            console.debug("Unknown intent with high confidence");
-          break;
+      for (entityName in outcome.entities) {  // eg. Ingredient
+        var entityValueWrappers = outcome.entities[entityName];  // eg. [egg, flour] (usually just 1)
+        var entityValues = [];
+        for (var k = 0; k < entityValueWrappers.length; k++) {
+          entityValues.push(entityValueWrappers[k].value);
         }
-        // TODO(ebensh): Add this back if we're only getting one intent?
-        //break;
+
+        if (entityType == "" && entityValue == "" && entityValues.length > 0) {
+          entityType = entityName;
+          entityValue = entityValues[0];
+        }
+        console.debug("Wit response (confidence: %f, intent: %s, entityType: %s, entityValue: %s",
+                      confidence, intent, entityType, entityValue);
+      }
+
+      switch (intent) {
+        case "ingredient_query":
+          selectIngredient(entityType, entityValue);
+          break;
+        case "instruction_navigation":
+          selectInstruction(entityType, entityValue);
+          break;
+        default:
+          console.debug("Unknown intent with high confidence");
+          break;
       }
     }
   }
@@ -89,7 +77,7 @@ if (Meteor.isClient) {
     Session.set("recipe", recipe);
   }
 
-  function selectIngredient(ingredient) {
+  function selectIngredient(unusedType, ingredient) {
     // Finds ingredient in the list of ingredients and selects it, setting
     // currentIngredient to its index.
     clearSelectedIngredients();
@@ -104,9 +92,42 @@ if (Meteor.isClient) {
     Session.set("recipe", recipe);
   }
 
-  function selectInstruction(instruction) {
+  function selectInstruction(type, instruction) {
     // TODO(ebensh): #YOLO420SWAG4JEZUS do this :)
-    console.debug("OMG WE DIDN'T DO THIS YET TROLOLOLOLOLO");
+    // Wit response (confidence: 0.999, intent: instruction_navigation, entity: ordinal, entityValue: 1
+    // Wit response (confidence: 0.991, intent: instruction_navigation, entity: relative_instruction_navigation, entityValue: next
+
+    var newInstruction = 0;
+    var currentInstruction = Session.get("currentInstruction");
+
+    if (type == "ordinal") { newInstruction = instruction; }
+    else if (type == "relative_instruction_navigation") {
+      switch (instruction) {
+        case "previous": newInstruction = currentInstruction - 1; break;
+        case "current": newInstruction = currentInstruction; break;
+        case "next": newInstruction = currentInstruction + 1; break;
+      }
+    } else {
+      console.error("Unknown instruction type");
+    }
+
+    selectAndSayInstruction(newInstruction);
+  }
+
+  function getInstructions() {
+    var bigInstructionText = Session.get("recipe").text;
+    return bigInstructionText.split(/\.\s/);
+  }
+
+  function selectAndSayInstruction(instruction) {
+    console.debug("Selecting and saying instruction: ", instruction);
+    var instructions = getInstructions();
+    if (instruction >= 1 && instruction <= instructions.length) {
+      Session.set("currentInstruction", instruction);
+      speak(instructions[instruction - 1]);
+    } else {
+      speak("Invalid instruction.");
+    }
   }
 
   /*
@@ -178,10 +199,7 @@ if (Meteor.isClient) {
   });
 
   Template.instructions.helpers({
-    instructions: function() {
-      var bigInstructionText = Session.get("recipe").text;
-      return bigInstructionText.split(/\.\s/);
-    }
+    instructions: getInstructions
   });
 
   Template.instruction.helpers({

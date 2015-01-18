@@ -100,7 +100,7 @@ if (Meteor.isClient) {
     var newInstruction = 0;
     var currentInstruction = Session.get("currentInstruction");
 
-    if (type == "ordinal") { newInstruction = instruction; }
+    if (type == "ordinal" || type == "number") { newInstruction = instruction; }
     else if (type == "relative_instruction_navigation") {
       switch (instruction) {
         case "previous": newInstruction = currentInstruction - 1; break;

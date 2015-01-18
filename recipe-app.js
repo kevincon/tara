@@ -1,6 +1,20 @@
 if (Meteor.isClient) {
-  Session.setDefault("currentInstruction", 1); // indexed by 1
-  Session.setDefault("recipe", {});
+  Meteor.startup(function () {
+    Session.setDefault("currentInstruction", 1); // indexed by 1
+    Session.setDefault("recipe", {});
+
+    if (annyang) {
+      var commands = {
+        '*command': function(command) { alert('You said: ' + command); }
+      };
+
+      annyang.addCommands(commands);
+
+      annyang.start();
+    }
+  });
+
+
 
   Meteor.call("getTestRecipe", function(error, result) {
     Session.set("recipe", result);

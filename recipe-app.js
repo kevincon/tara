@@ -16,7 +16,7 @@ if (Meteor.isClient) {
                        function (error, result) {
                          console.log(error);
                          if (!error) {
-                          console.log(EJSON.stringify(result));
+                          handleWitResponse(EJSON.parse(result.content));
                          }
                        });
             }
@@ -30,11 +30,91 @@ if (Meteor.isClient) {
     }
   });
 
+  function handleWitResponse(json) {
+    console.debug("Handling wit response: ", json);
 
+    for (var i = 0; i < json.outcomes.length; i++) {
+      var outcome = json.outcomes[i];
+      var confidence = outcome.confidence;
+      var intent = outcome.intent;
+      var entities = [];
+      for (entityName in outcome.entities) {
+        var entityArray = outcome.entities[entityName];
+        for (var k = 0; k < entityArray.length; k++) {
+          entities.push(entityName + "," + entityArray[k].value);
+        }
+      }
+      console.debug("Wit response (confidence: %f, intent: %s, entities: %s",
+                    confidence, intent, entities.join(","));
+    }
 
+    for (outcome_index in json.outcomes) {
+      var outcome = json.outcomes[outcome_index];
+      console.debug("Outcome: ", EJSON.stringify(outcome));
+      if (outcome.confidence >= 0.8) {
+        switch (outcome.intent) {
+          case "ingredient_query":
+            if (outcome.entities.ingredient.length > 0) {
+              var ingredient = outcome.entities.ingredient[0].value;
+              console.debug("ingredient_query: ", ingredient);
+              selectIngredient(ingredient);
+            } else {
+              console.debug("No valid ingredients!");
+            }
+          break;
+          case "instruction_navigation":
+            if (outcome.entities.instruction.length > 0) {
+              var instruction = outcome.entities.instruction[0].value;
+              console.debug("instruction_navigation: ", instruction);
+              selectInstruction(instruction);
+            } else {
+              console.debug("No valid ingredients!");
+            }
+          break;
+          default:
+            console.debug("Unknown intent with high confidence");
+          break;
+        }
+        // TODO(ebensh): Add this back if we're only getting one intent?
+        //break;
+      }
+    }
+  }
+
+  function clearSelectedIngredients() {
+    var recipe = Session.get("recipe");
+    for (var i = 0; i < recipe.extendedIngredients.length; i++) {
+      recipe.extendedIngredients[i].highlight = false;
+    }
+    Session.set("recipe", recipe);
+  }
+
+  function selectIngredient(ingredient) {
+    // Finds ingredient in the list of ingredients and selects it, setting
+    // currentIngredient to its index.
+    clearSelectedIngredients();
+    var recipe = Session.get("recipe");
+    for (var i = 0; i < recipe.extendedIngredients.length; i++) {
+      if (recipe.extendedIngredients[i].name.indexOf(ingredient) != -1) {
+        console.debug("Selected ingredient: ", recipe.extendedIngredients[i].originalString);
+        recipe.extendedIngredients[i].highlight = true;
+        speak(recipe.extendedIngredients[i].originalString);
+      }
+    }
+    Session.set("recipe", recipe);
+  }
+
+  function selectInstruction(instruction) {
+    // TODO(ebensh): #YOLO420SWAG4JEZUS do this :)
+    console.debug("OMG WE DIDN'T DO THIS YET TROLOLOLOLOLO");
+  }
+
+  /*
+  // For debug only:
   Meteor.call("getTestRecipe", function(error, result) {
     Session.set("recipe", result);
   });
+  */
 
   Template.recipeurl.events = {
     // If the enter key is pressed in the recipe URL input box, load the url.
@@ -120,7 +200,10 @@ if (Meteor.isClient) {
   function speak(text) {
     Meteor.call("getSpeechURL", text, function(error, result) {
       var speech = new buzz.sound(result);
-      speech.play();
+      if (speech) {
+        for (var i in buzz.sounds) { buzz.sounds[i].stop(); }
+        speech.play();
+      }
     });
   }
 }

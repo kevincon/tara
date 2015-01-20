@@ -11,14 +11,16 @@ if (Meteor.isClient) {
             if (!tokenError) {
               var parameters = {"q": command,
                                 "access_token": accessToken};
-              HTTP.get('https://api.wit.ai/message',
-                       {params: parameters},
-                       function (error, result) {
-                         console.log(error);
-                         if (!error) {
-                          handleWitResponse(EJSON.parse(result.content));
-                         }
-                       });
+              $.ajax({
+                url: 'https://api.wit.ai/message',
+                data: parameters,
+                dataType: 'jsonp',
+                method: 'GET',
+                success: function(response) {
+                    console.log(response);
+                    handleWitResponse(response);
+                }
+              });
             }
           });
         }

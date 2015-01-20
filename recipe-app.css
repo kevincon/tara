@@ -1,5 +1,5 @@
 /* CSS declarations go here */
-body{
+body {
     background-color:#ffda76;
     min-height: 100%;  /* Fallback for browsers do NOT support vh unit */
     min-height: 100vh; /* These two lines are counted as one :-)       */
@@ -7,18 +7,23 @@ body{
     display: flex;
     align-items: center;
 }
-.jumbotron{
+
+.jumbotron {
     background-color:#e8d7c9;
     border: 2px solid #ae7bff;
 }
+
 td {
     border-top-color:#e88ce0 !important;
 }
-img{
-    border: 1px solid black;
-}
 
-.container img {
+.recipeimage {
+    border: 1px solid black;
     max-height:200px;
     max-width:200px;
+}
+
+.vertical-align {
+    display: flex;
+    align-items: center;
 }

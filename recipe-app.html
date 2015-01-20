@@ -3,14 +3,11 @@
 </head>
 
 <body>
-    <div class="container vertical">
+    <a href="https://github.com/kevincon/recipe-app"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png"></a>
+    <div class="container">
         <div class="jumbotron">
             {{> pageTitle}}
-            <div class="form-horizontal">
-                <div class="form-group">
-                    {{> recipeurl}}
-                </div>
-            </div>
+            {{> recipeurl}}
             <div class="row">
                 <div align="center" class="col-md-12">
                     <a href="#" class="favorite">Or try one of our favorites!</a>
@@ -38,10 +35,24 @@
             {{/if}}
 
         </div>
-        <footer class="text-center">
-          <p>Created by <a href="http://kevintechnology.com/">Kevin Conley,
-              </a> <a href="https://www.linkedin.com/pub/evan-benshetler/17/930/715">Evan Benshetler</a>, and <a href="https://www.linkedin.com/pub/katarina-polcari/95/835/833">Katarina Polcari</a>.</p>
-        </footer>
+
+        <div class="text-center">
+            <div class="row" align="center">
+                <div class="col-md-12">
+                    <p>Created by <a href="http://kevintechnology.com/">Kevin Conley,</a> <a href="https://www.linkedin.com/pub/evan-benshetler/17/930/715">Evan Benshetler</a>, and <a href="https://www.linkedin.com/pub/katarina-polcari/95/835/833">Katarina Polcari</a> at <a href="http://2015s.pennapps.com/">PennApps Winter 2015</a>.</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <p>Powered by</p>
+                    <a href="http://webknox.com/"><img alt="Webknox" src="/images/webknox.png"></a>
+                    <a href="https://www.ispeech.org/"><img alt="iSpeech" src="/images/ispeech.png"></a>
+                </div>
+            </div>
+
+        </div>
+
     </div>
 
 </body>
@@ -54,14 +65,14 @@
 </template>
 
 <template name="recipeurl">
-    <input type="text" size=50 class="recipeurl col-md-12 input-lg" placeholder="Enter a link to a recipe here...">
+    <input class="recipeurl form-control input-lg" type="text" size=50 placeholder="Enter a link to a recipe here...">
 </template>
 
 <template name="title">
     <div align="center">
         <h2>{{title}}</h2>
         {{#if image.value}}
-            <img src="{{image.value}}" class="img-circle">
+            <img src="{{image.value}}" class="recipeimage img-circle img-responsive">
         {{/if}}
     </div>
 

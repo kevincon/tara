@@ -3,26 +3,41 @@ if (Meteor.isClient) {
     Session.setDefault("currentInstruction", 1); // indexed by 1
     Session.setDefault("recipe", null);
 
+    Session.setDefault("isListening", false);
+  });
+
+  function startAnnyang() {
     if (annyang) {
       var commands = {
+        'hey *name': function(name) {
+          if (!Session.get("isListening")) {
+            speak("Yes?");
+            Session.set("isListening", true);
+          }
+        },
         '*command': function(command) {
-          Meteor.call("getWitAccessToken", function(tokenError, accessToken) {
-            console.log(tokenError);
-            if (!tokenError) {
-              var parameters = {"q": command,
-                                "access_token": accessToken};
-              $.ajax({
-                url: 'https://api.wit.ai/message',
-                data: parameters,
-                dataType: 'jsonp',
-                method: 'GET',
-                success: function(response) {
-                    console.log(response);
-                    handleWitResponse(response);
-                }
-              });
-            }
-          });
+          if (Session.get("isListening")) {
+            Meteor.call("getWitAccessToken", function(tokenError, accessToken) {
+              console.log(tokenError);
+              if (!tokenError) {
+                var parameters = {"q": command,
+                                  "access_token": accessToken};
+                $.ajax({
+                  url: 'https://api.wit.ai/message',
+                  data: parameters,
+                  dataType: 'jsonp',
+                  method: 'GET',
+                  success: function(response) {
+                      console.log(response);
+                      handleWitResponse(response);
+                      Session.set("isListening", false);
+                  }
+                });
+              }
+            });
+          } else {
+            console.log("heard " + command + " while not listening...");
+          }
         }
       };
 
@@ -30,7 +45,7 @@ if (Meteor.isClient) {
 
       annyang.start();
     }
-  });
+  }
 
   function handleWitResponse(json) {
     console.debug("Handling wit response: ", json);
@@ -55,6 +70,12 @@ if (Meteor.isClient) {
         }
         console.debug("Wit response (confidence: %f, intent: %s, entityType: %s, entityValue: %s",
                       confidence, intent, entityType, entityValue);
+      }
+
+      if (entityType == "" && entityValue == "") {
+        console.log("No entities found.");
+        speak("Sorry, can you repeat that?");
+        return;
       }
 
       switch (intent) {
@@ -84,14 +105,21 @@ if (Meteor.isClient) {
     // currentIngredient to its index.
     clearSelectedIngredients();
     var recipe = Session.get("recipe");
+    var foundIngredient = false;
     for (var i = 0; i < recipe.extendedIngredients.length; i++) {
       if (recipe.extendedIngredients[i].name.indexOf(ingredient) != -1) {
         console.debug("Selected ingredient: ", recipe.extendedIngredients[i].originalString);
         recipe.extendedIngredients[i].highlight = true;
         speak(recipe.extendedIngredients[i].originalString);
+        foundIngredient = true;
       }
     }
-    Session.set("recipe", recipe);
+
+    if (!foundIngredient) {
+      speak("Sorry, I didn't see " + ingredient + " in this recipe.");
+    } else {
+      Session.set("recipe", recipe);
+    }
   }
 
   function selectInstruction(type, instruction) {
@@ -166,6 +194,7 @@ if (Meteor.isClient) {
         console.debug("Result is good :)");
         console.debug("Stringified recipe: " + EJSON.stringify(result));
         Session.set("recipe", result);
+        startAnnyang();
       }
     });
   }

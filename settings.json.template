@@ -1,5 +1,10 @@
 {
     "ISPEECH_API_KEY": null,
     "WEBKNOX_API_KEY": null,
-    "WIT_ACCESS_TOKEN": null
+    "WIT_ACCESS_TOKEN": null,
+    "public" : {
+        "ga": {
+          "account":"UA-XXXXXXX-Y"
+        }
+    }
 }

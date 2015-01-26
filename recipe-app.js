@@ -4,6 +4,8 @@ if (Meteor.isClient) {
     Session.setDefault("recipe", null);
 
     Session.setDefault("isListening", false);
+
+    GAnalytics.pageview();
   });
 
   function startAnnyang() {

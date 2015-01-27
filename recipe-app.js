@@ -226,7 +226,8 @@ if (Meteor.isClient) {
           if (url.indexOf("http") != -1) {
             return {"key": 0, "value": imageUrls[0]};
           } else {
-            return {"key": 0, "value": null};
+            var imageCacheUrl = "http://webknox.com/recipeImages/"
+            return {"key": 0, "value": imageCacheUrl + imageUrls[0]};
           }
         } else {
           // TODO return placeholder image instead of null

@@ -1,10 +1,14 @@
 if (Meteor.isClient) {
+  var ListeningState = Object.freeze({
+      NOT_LISTENING: 0,
+      LISTENING: 1
+  });
+
   Meteor.startup(function () {
     Session.setDefault("currentInstruction", 1); // indexed by 1
     Session.setDefault("recipe", null);
 
-    Session.setDefault("isListening", false);
-    Session.setDefault("shouldBeListening", false);
+    Session.setDefault("listeningState", ListeningState.NOT_LISTENING);
     Session.setDefault("annyangNotSupported", true);
     Session.setDefault("microphoneDisabled", false);
     Session.setDefault("loading", false);
@@ -14,18 +18,26 @@ if (Meteor.isClient) {
     startAnnyang();
   });
 
+  function isListening() { return Session.get("listeningState") == ListeningState.LISTENING; }
+  function startListening() { Session.set("listeningState", ListeningState.LISTENING); }
+  function startListeningAfterPrompt(prompt) {
+    // This way we'll start listening as soon as speaking is complete.
+    startListening();
+    speak(prompt);
+  }
+  function stopListening() { Session.set("listeningState", ListeningState.NOT_LISTENING); }
+
   function startAnnyang() {
     if (annyang) {
       Session.set("annyangNotSupported", false);
       var commands = {
         'hey *name': function(name) {
-          if (!Session.get("isListening")) {
-            Session.set("shouldBeListening", true);
-            speak("Yes?");
+          if (!isListening()) {
+            startListeningAfterPrompt("Yes?");
           }
         },
         '*command': function(command) {
-          if (Session.get("isListening") && Session.get("shouldBeListening")) {
+          if (isListening()) {
             Meteor.call("getWitAccessToken", function(tokenError, accessToken) {
               console.log(tokenError);
               if (!tokenError) {
@@ -37,14 +49,14 @@ if (Meteor.isClient) {
                   dataType: 'jsonp',
                   method: 'GET',
                   success: function(response) {
-                      Session.set("shouldBeListening", false);
-                      handleWitResponse(response);
+                    stopListening();
+                    handleWitResponse(response);
                   }
                 });
               }
             });
           } else {
-            console.log("heard " + command + " while not listening...");
+            console.log("Heard '" + command + "' while not listening...");
           }
         }
       };
@@ -91,8 +103,7 @@ if (Meteor.isClient) {
 
       if (entityType == "" && entityValue == "") {
         console.log("No entities found.");
-        Session.set("shouldBeListening", true);
-        speak("Sorry, can you repeat that?");
+        startListeningAfterPrompt("Sorry, can you repeat that?");
         return;
       }
 
@@ -141,10 +152,6 @@ if (Meteor.isClient) {
   }
 
   function selectInstruction(type, instruction) {
-    // TODO(ebensh): #YOLO420SWAG4JEZUS do this :)
-    // Wit response (confidence: 0.999, intent: instruction_navigation, entity: ordinal, entityValue: 1
-    // Wit response (confidence: 0.991, intent: instruction_navigation, entity: relative_instruction_navigation, entityValue: next
-
     var newInstruction = 0;
     var currentInstruction = Session.get("currentInstruction");
 
@@ -309,14 +316,14 @@ if (Meteor.isClient) {
     Meteor.call("getSpeechURL", text, function(error, result) {
       var speech = new buzz.sound(result);
       if (speech) {
-        speech.bind("ended", function() {
-          Session.set("isListening", Session.get("shouldBeListening"));
-        });
+        speech.bind("ended", _.partial(function(previousState) {
+          // When we're done speaking return our listening to its previous
+          // state.
+          Session.set("listeningState", previousState);
+        }, Session.get("listeningState")));
         for (var i in buzz.sounds) { buzz.sounds[i].stop(); }
-        Session.set("isListening", false);
+        stopListening();
         speech.play();
-      } else {
-        Session.set("isListening", Session.get("shouldBeListening"));
       }
     });
   }

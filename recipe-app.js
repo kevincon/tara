@@ -21,8 +21,9 @@ if (Meteor.isClient) {
   function isListening() { return Session.get("listeningState") == ListeningState.LISTENING; }
   function startListening() { Session.set("listeningState", ListeningState.LISTENING); }
   function startListeningAfterPrompt(prompt) {
-    speak(prompt);
+    // This way we'll start listening as soon as speaking is complete.
     startListening();
+    speak(prompt);
   }
   function stopListening() { Session.set("listeningState", ListeningState.NOT_LISTENING); }
 
@@ -55,7 +56,7 @@ if (Meteor.isClient) {
               }
             });
           } else {
-            console.log("heard " + command + " while not listening...");
+            console.log("Heard '" + command + "' while not listening...");
           }
         }
       };
@@ -315,11 +316,11 @@ if (Meteor.isClient) {
     Meteor.call("getSpeechURL", text, function(error, result) {
       var speech = new buzz.sound(result);
       if (speech) {
-        speech.bind("ended", function(previousState) {
+        speech.bind("ended", _.partial(function(previousState) {
           // When we're done speaking return our listening to its previous
           // state.
-          Session.set("listeningState", previousState));
-        }.bind(Session.get("listeningState")));
+          Session.set("listeningState", previousState);
+        }, Session.get("listeningState")));
         for (var i in buzz.sounds) { buzz.sounds[i].stop(); }
         stopListening();
         speech.play();

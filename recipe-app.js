@@ -45,7 +45,6 @@ if (Meteor.isClient) {
             });
           } else {
             console.log("heard " + command + " while not listening...");
-            Session.set("annyangNotSupported", true);
           }
         }
       };
@@ -60,6 +59,8 @@ if (Meteor.isClient) {
       annyang.addCallback('errorPermissionDenied', microphoneDisabled);
 
       annyang.start();
+    } else {
+      Session.set("annyangNotSupported", true);
     }
   }
 

@@ -4,12 +4,18 @@ if (Meteor.isClient) {
     Session.setDefault("recipe", null);
 
     Session.setDefault("isListening", false);
+    Session.setDefault("annyangNotSupported", true);
+    Session.setDefault("microphoneDisabled", false);
+    Session.setDefault("loading", false);
 
     GAnalytics.pageview();
+
+    startAnnyang();
   });
 
   function startAnnyang() {
     if (annyang) {
+      Session.set("annyangNotSupported", false);
       var commands = {
         'hey *name': function(name) {
           if (!Session.get("isListening")) {
@@ -39,11 +45,19 @@ if (Meteor.isClient) {
             });
           } else {
             console.log("heard " + command + " while not listening...");
+            Session.set("annyangNotSupported", true);
           }
         }
       };
 
       annyang.addCommands(commands);
+
+      function microphoneDisabled() {
+        Session.set("microphoneDisabled", true);
+      }
+
+      annyang.addCallback('errorPermissionBlocked', microphoneDisabled);
+      annyang.addCallback('errorPermissionDenied', microphoneDisabled);
 
       annyang.start();
     }
@@ -172,17 +186,29 @@ if (Meteor.isClient) {
   Template.body.helpers({
     recipeExists: function() {
       return Session.get("recipe") !== null;
+    },
+    annyangNotSupported: function() {
+      return Session.get("annyangNotSupported");
+    },
+    microphoneDisabled: function() {
+      return Session.get("microphoneDisabled");
+    },
+    isLoading: function() {
+      return Session.get("loading");
     }
   });
 
   Template.body.events = {
     'click .favorite': function(event, template) {
       var url = template.find(".recipeurl").value;
-      loadRecipeUrl("http://allrecipes.com/recipe/best-mac-n-cheese-ever/");
+      loadRecipeUrl("http://www.foodnetwork.com/recipes/alton-brown/baked-macaroni-and-cheese-recipe.html");
     }
   };
 
   function loadRecipeUrl(url) {
+    $('.recipeurl').attr("disabled", "disabled");
+    Session.set("loading", true);
+
     if (!url || url.length === 0) {
       console.log("bad recipe url");
       return;
@@ -196,8 +222,10 @@ if (Meteor.isClient) {
         console.debug("Result is good :)");
         console.debug("Stringified recipe: " + EJSON.stringify(result));
         Session.set("recipe", result);
-        startAnnyang();
+        $(".recipeurl").val("");
       }
+      Session.set("loading", false);
+      $(".recipeurl").removeAttr("disabled");
     });
   }
 

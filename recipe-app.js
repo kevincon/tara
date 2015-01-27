@@ -32,7 +32,7 @@ if (Meteor.isClient) {
       var commands = {
         'hey *name': function(name) {
           if (!isListening()) {
-	    startListeningAfterPrompt("Yes?");
+            startListeningAfterPrompt("Yes?");
           }
         },
         '*command': function(command) {
@@ -48,8 +48,8 @@ if (Meteor.isClient) {
                   dataType: 'jsonp',
                   method: 'GET',
                   success: function(response) {
-		      stopListening();
-                      handleWitResponse(response);
+                    stopListening();
+                    handleWitResponse(response);
                   }
                 });
               }
@@ -102,7 +102,7 @@ if (Meteor.isClient) {
 
       if (entityType == "" && entityValue == "") {
         console.log("No entities found.");
-	startListeningAfterPrompt("Sorry, can you repeat that?");
+        startListeningAfterPrompt("Sorry, can you repeat that?");
         return;
       }
 
@@ -316,12 +316,12 @@ if (Meteor.isClient) {
       var speech = new buzz.sound(result);
       if (speech) {
         speech.bind("ended", function(previousState) {
-	  // When we're done speaking return our listening to its previous
-	  // state.
+          // When we're done speaking return our listening to its previous
+          // state.
           Session.set("listeningState", previousState));
         }.bind(Session.get("listeningState")));
         for (var i in buzz.sounds) { buzz.sounds[i].stop(); }
-	stopListening();
+        stopListening();
         speech.play();
       }
     });

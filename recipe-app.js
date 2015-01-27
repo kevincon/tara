@@ -4,6 +4,7 @@ if (Meteor.isClient) {
     Session.setDefault("recipe", null);
 
     Session.setDefault("isListening", false);
+    Session.setDefault("shouldBeListening", false);
     Session.setDefault("annyangNotSupported", true);
     Session.setDefault("microphoneDisabled", false);
     Session.setDefault("loading", false);
@@ -19,12 +20,12 @@ if (Meteor.isClient) {
       var commands = {
         'hey *name': function(name) {
           if (!Session.get("isListening")) {
+            Session.set("shouldBeListening", true);
             speak("Yes?");
-            Session.set("isListening", true);
           }
         },
         '*command': function(command) {
-          if (Session.get("isListening")) {
+          if (Session.get("isListening") && Session.get("shouldBeListening")) {
             Meteor.call("getWitAccessToken", function(tokenError, accessToken) {
               console.log(tokenError);
               if (!tokenError) {
@@ -36,9 +37,8 @@ if (Meteor.isClient) {
                   dataType: 'jsonp',
                   method: 'GET',
                   success: function(response) {
-                      console.log(response);
+                      Session.set("shouldBeListening", false);
                       handleWitResponse(response);
-                      Session.set("isListening", false);
                   }
                 });
               }
@@ -91,6 +91,7 @@ if (Meteor.isClient) {
 
       if (entityType == "" && entityValue == "") {
         console.log("No entities found.");
+        Session.set("shouldBeListening", true);
         speak("Sorry, can you repeat that?");
         return;
       }
@@ -218,10 +219,9 @@ if (Meteor.isClient) {
     console.debug("Loading new recipe from URL: " + url);
     Meteor.call("getRecipe", url, function(error, result) {
       if (result === undefined || result === null) {
-        console.debug("Result is bad :(");
+        console.debug("Result result is bad :(");
       } else {
-        console.debug("Result is good :)");
-        console.debug("Stringified recipe: " + EJSON.stringify(result));
+        console.debug("Recipe result is good :)");
         Session.set("recipe", result);
         $(".recipeurl").val("");
       }
@@ -255,7 +255,7 @@ if (Meteor.isClient) {
           if (url.indexOf("http") != -1) {
             return {"key": 0, "value": imageUrls[0]};
           } else {
-            var imageCacheUrl = "http://webknox.com/recipeImages/"
+            var imageCacheUrl = "https://webknox.com/recipeImages/"
             return {"key": 0, "value": imageCacheUrl + imageUrls[0]};
           }
         } else {
@@ -309,8 +309,14 @@ if (Meteor.isClient) {
     Meteor.call("getSpeechURL", text, function(error, result) {
       var speech = new buzz.sound(result);
       if (speech) {
+        speech.bind("ended", function() {
+          Session.set("isListening", Session.get("shouldBeListening"));
+        });
         for (var i in buzz.sounds) { buzz.sounds[i].stop(); }
+        Session.set("isListening", false);
         speech.play();
+      } else {
+        Session.set("isListening", Session.get("shouldBeListening"));
       }
     });
   }

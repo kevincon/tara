@@ -11,6 +11,11 @@ body {
 .jumbotron {
     background-color:#e8d7c9;
     border: 2px solid #ae7bff;
+    margin-top: 20px;
+}
+
+.container {
+    margin-bottom: 20px;
 }
 
 td {

@@ -7,6 +7,7 @@ if (Meteor.isClient) {
   Meteor.startup(function () {
     Session.setDefault("currentInstruction", 1); // indexed by 1
     Session.setDefault("recipe", null);
+    Session.setDefault("lastHeard", "");
 
     Session.setDefault("listeningState", ListeningState.NOT_LISTENING);
     Session.setDefault("annyangNotSupported", true);
@@ -18,11 +19,14 @@ if (Meteor.isClient) {
     startAnnyang();
   });
 
+  function showSpeechModal() { $("#myModal").modal("show"); }
+  function hideSpeechModal() { $("#myModal").modal("hide"); Session.set("lastHeard", ""); }
   function isListening() { return Session.get("listeningState") == ListeningState.LISTENING; }
   function startListening() { Session.set("listeningState", ListeningState.LISTENING); }
   function startListeningAfterPrompt(prompt) {
     // This way we'll start listening as soon as speaking is complete.
     startListening();
+    showSpeechModal();
     speak(prompt);
   }
   function stopListening() { Session.set("listeningState", ListeningState.NOT_LISTENING); }
@@ -38,6 +42,9 @@ if (Meteor.isClient) {
         },
         '*command': function(command) {
           if (isListening()) {
+            console.debug("Setting lastHeard: " + command);
+            Session.set("lastHeard", command);
+            setTimeout(function() { hideSpeechModal(); }, 1200);
             Meteor.call("getWitAccessToken", function(tokenError, accessToken) {
               console.log(tokenError);
               if (!tokenError) {
@@ -56,6 +63,7 @@ if (Meteor.isClient) {
               }
             });
           } else {
+            Session.setDefault("lastHeard", "Try saying \"Hey, Tara\" to start ");
             console.log("Heard '" + command + "' while not listening...");
           }
         }
@@ -248,6 +256,10 @@ if (Meteor.isClient) {
       }
     }
   };
+
+  Template.recognizedSpeech.helpers({
+    recognizedSpeech: function() { return Session.get("lastHeard"); }
+  });
 
   Template.title.helpers({
     title: function() {

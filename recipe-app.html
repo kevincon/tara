@@ -34,7 +34,7 @@
             {{#if isLoading}}
                 <br>
                 <div align="center">
-                    <button class="btn btn-lg btn-primary"><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate" disabled="disabled"></span> Loading...</button>
+                    <button class="btn btn-lg btn-primary"><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Loading...</button>
                 </div>
                 <br>
             {{/if}}
@@ -82,12 +82,20 @@
                     <a href="https://www.ispeech.org/"><img alt="iSpeech" src="/images/ispeech.png"></a>
                 </div>
             </div>
-
         </div>
-
     </div>
-
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body">
+            {{> recognizedSpeech}}
+          </div>
+        </div>
+      </div>
+    </div>
 </body>
+
 
 <template name="pageTitle">
     <div align="center">
@@ -107,7 +115,14 @@
             <img src="{{image.value}}" class="recipeimage img-rounded img-responsive">
         {{/if}}
     </div>
+</template>
 
+<template name="recognizedSpeech">
+    <div align="center" class="text-center">
+        <h2>Yes?</h2>
+        <div align="center" class="pulsating_ring"></div>
+        <h3>{{recognizedSpeech}}</h3>
+    </div>
 </template>
 
 <template name="ingredients">

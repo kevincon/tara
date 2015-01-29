@@ -20,7 +20,7 @@ if (Meteor.isClient) {
   });
 
   function showSpeechModal() { $("#myModal").modal("show"); }
-  function hideSpeechModal() { $("#myModal").modal("hide"); }
+  function hideSpeechModal() { $("#myModal").modal("hide"); Session.set("lastHeard", ""); }
   function isListening() { return Session.get("listeningState") == ListeningState.LISTENING; }
   function startListening() { Session.set("listeningState", ListeningState.LISTENING); }
   function startListeningAfterPrompt(prompt) {
@@ -44,7 +44,7 @@ if (Meteor.isClient) {
           if (isListening()) {
             console.debug("Setting lastHeard: " + command);
             Session.set("lastHeard", command);
-            setTimeout(function() { hideSpeechModal(); }, 3000);
+            setTimeout(function() { hideSpeechModal(); }, 1200);
             Meteor.call("getWitAccessToken", function(tokenError, accessToken) {
               console.log(tokenError);
               if (!tokenError) {

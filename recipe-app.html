@@ -29,14 +29,6 @@
                 <div align="center" class="col-md-12">
                     <a href="#" class="favorite">Or try one of our favorites!</a>
                 </div>
-                <div align="center" class="col-md-12">
-                    <!-- For debugging / crafting TARA's modal -->
-                    <!--
-                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal">
-                      Show test modal
-                    </button>
-                    -->
-                </div>
             </div>
 
             {{#if isLoading}}
@@ -99,9 +91,6 @@
           <div class="modal-body">
             {{> recognizedSpeech}}
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          </div>
         </div>
       </div>
     </div>
@@ -129,7 +118,10 @@
 </template>
 
 <template name="recognizedSpeech">
-    {{recognizedSpeech}}
+    <div class="text-center">
+        <h4>Yes?</h4>
+        <h3>{{recognizedSpeech}}</h3>
+    </div>
 </template>
 
 <template name="ingredients">

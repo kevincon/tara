@@ -26,8 +26,8 @@ if (Meteor.isClient) {
   function startListeningAfterPrompt(prompt) {
     // This way we'll start listening as soon as speaking is complete.
     startListening();
-    showSpeechModal();
     speak(prompt);
+    showSpeechModal();
   }
   function stopListening() { Session.set("listeningState", ListeningState.NOT_LISTENING); }
 

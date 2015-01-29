@@ -34,7 +34,7 @@
             {{#if isLoading}}
                 <br>
                 <div align="center">
-                    <button class="btn btn-lg btn-primary"><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate" disabled="disabled"></span> Loading...</button>
+                    <button class="btn btn-lg btn-primary"><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Loading...</button>
                 </div>
                 <br>
             {{/if}}
@@ -118,8 +118,9 @@
 </template>
 
 <template name="recognizedSpeech">
-    <div class="text-center">
-        <h4>Yes?</h4>
+    <div align="center" class="text-center">
+        <h2>Yes?</h2>
+        <div align="center" class="pulsating_ring"></div>
         <h3>{{recognizedSpeech}}</h3>
     </div>
 </template>

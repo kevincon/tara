@@ -29,6 +29,14 @@
                 <div align="center" class="col-md-12">
                     <a href="#" class="favorite">Or try one of our favorites!</a>
                 </div>
+                <div align="center" class="col-md-12">
+                    <!-- For debugging / crafting TARA's modal -->
+                    <!--
+                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal">
+                      Show test modal
+                    </button>
+                    -->
+                </div>
             </div>
 
             {{#if isLoading}}
@@ -82,12 +90,23 @@
                     <a href="https://www.ispeech.org/"><img alt="iSpeech" src="/images/ispeech.png"></a>
                 </div>
             </div>
-
         </div>
-
     </div>
-
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body">
+            {{> recognizedSpeech}}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
 </body>
+
 
 <template name="pageTitle">
     <div align="center">
@@ -107,7 +126,10 @@
             <img src="{{image.value}}" class="recipeimage img-rounded img-responsive">
         {{/if}}
     </div>
+</template>
 
+<template name="recognizedSpeech">
+    {{recognizedSpeech}}
 </template>
 
 <template name="ingredients">

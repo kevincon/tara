@@ -24,9 +24,7 @@ if (Meteor.isClient) {
   function isListening() { return Session.get("listeningState") == ListeningState.LISTENING; }
   function startListening() { Session.set("listeningState", ListeningState.LISTENING); }
   function startListeningAfterPrompt(prompt) {
-    // This way we'll start listening as soon as speaking is complete.
-    startListening();
-    speak(prompt);
+    speak(prompt, ListeningState.LISTENING);
     showSpeechModal();
   }
   function stopListening() { Session.set("listeningState", ListeningState.NOT_LISTENING); }
@@ -44,7 +42,6 @@ if (Meteor.isClient) {
           if (isListening()) {
             console.debug("Setting lastHeard: " + command);
             Session.set("lastHeard", command);
-            setTimeout(function() { hideSpeechModal(); }, 1200);
             Meteor.call("getWitAccessToken", function(tokenError, accessToken) {
               console.log(tokenError);
               if (!tokenError) {
@@ -56,14 +53,13 @@ if (Meteor.isClient) {
                   dataType: 'jsonp',
                   method: 'GET',
                   success: function(response) {
-                    stopListening();
                     handleWitResponse(response);
+                    setTimeout(function() { hideSpeechModal(); }, 1200);
                   }
                 });
               }
             });
           } else {
-            Session.setDefault("lastHeard", "Try saying \"Hey, Tara\" to start ");
             console.log("Heard '" + command + "' while not listening...");
           }
         }
@@ -111,8 +107,7 @@ if (Meteor.isClient) {
 
       if (entityType == "" && entityValue == "") {
         console.log("No entities found.");
-        startListeningAfterPrompt("Sorry, can you repeat that?");
-        return;
+        speak("Sorry, I didn't understand that.", ListeningState.NOT_LISTENING);
       }
 
       switch (intent) {
@@ -147,13 +142,13 @@ if (Meteor.isClient) {
       if (recipe.extendedIngredients[i].name.indexOf(ingredient) != -1) {
         console.debug("Selected ingredient: ", recipe.extendedIngredients[i].originalString);
         recipe.extendedIngredients[i].highlight = true;
-        speak(recipe.extendedIngredients[i].originalString);
+        speak(recipe.extendedIngredients[i].originalString, ListeningState.NOT_LISTENING);
         foundIngredient = true;
       }
     }
 
     if (!foundIngredient) {
-      speak("Sorry, I didn't see " + ingredient + " in this recipe.");
+      speak("Sorry, I didn't see " + ingredient + " in this recipe.", ListeningState.NOT_LISTENING);
     } else {
       Session.set("recipe", recipe);
     }
@@ -187,9 +182,9 @@ if (Meteor.isClient) {
     var instructions = getInstructions();
     if (instruction >= 1 && instruction <= instructions.length) {
       Session.set("currentInstruction", instruction);
-      speak(instructions[instruction - 1]);
+      speak(instructions[instruction - 1], ListeningState.NOT_LISTENING);
     } else {
-      speak("Invalid instruction.");
+      speak("Invalid instruction.", ListeningState.NOT_LISTENING);
     }
   }
 
@@ -295,7 +290,7 @@ if (Meteor.isClient) {
 
   Template.ingredient.events({
     "click tr": function() {
-      speak(this.originalString);
+      speak(this.originalString, Session.get("listeningState"));
     }
   });
 
@@ -320,19 +315,19 @@ if (Meteor.isClient) {
   Template.instruction.events({
     "click tr": function() {
       Session.set("currentInstruction", this.key);
-      speak(this.value);
+      speak(this.value, Session.get("listeningState"));
     }
   });
 
-  function speak(text) {
+  function speak(text, restoreState) {
     Meteor.call("getSpeechURL", text, function(error, result) {
       var speech = new buzz.sound(result);
       if (speech) {
-        speech.bind("ended", _.partial(function(previousState) {
+        speech.bind("ended", function() {
           // When we're done speaking return our listening to its previous
           // state.
-          Session.set("listeningState", previousState);
-        }, Session.get("listeningState")));
+          Session.set("listeningState", restoreState);
+        });
         for (var i in buzz.sounds) { buzz.sounds[i].stop(); }
         stopListening();
         speech.play();
